@@ -1,0 +1,11 @@
+services:
+  DB:
+    image: postgres:15.3
+    container_name: control-prestamos-aulas-laboratorios
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: prestamos
+      POSTGRES_PASSWORD: prestamos
+    volumes:
+      - ./postgres:/var/lib/postgresql/data

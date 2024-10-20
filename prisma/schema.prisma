@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id          Int       @id @default(autoincrement())
+  nombre      String    @db.VarChar(50)
+  apellido    String    @db.VarChar(50)
+  email       String    @unique @db.VarChar(100)
+  password  String    @db.VarChar(255)
+  tipoUsuario TipoUsuario
+
+  reservas    Reserva[]  // Relación con la tabla Reservas
+}
+
+model Espacio {
+  id         Int       @id @default(autoincrement())
+  nombre     String    @db.VarChar(50)
+  tipoEspacio TipoEspacio
+  capacidad  Int
+  ubicacion  String    @db.VarChar(100)
+
+  reservas   Reserva[]  // Relación con la tabla Reservas
+}
+
+model Reserva {
+  id          Int       @id @default(autoincrement())
+  usuarioId   Int
+  espacioId   Int
+  fecha       DateTime  @db.Date
+  horaInicio  DateTime  @db.Time
+  horaFin     DateTime  @db.Time
+
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id])
+  espacio     Espacio   @relation(fields: [espacioId], references: [id])
+  historial   HistorialReserva[]
+}
+
+model HistorialReserva {
+  id           Int      @id @default(autoincrement())
+  reservaId    Int
+  estado       Estado
+  fechaCambio  DateTime @db.Date
+
+  reserva      Reserva  @relation(fields: [reservaId], references: [id])
+}
+
+enum TipoUsuario {
+  Estudiante
+  Profesor
+  Administrador
+}
+
+enum TipoEspacio {
+  Laboratorio
+  Aula
+}
+
+enum Estado {
+  Reservado
+  Cancelado
+  Completado
+}
