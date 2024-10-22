@@ -12,7 +12,9 @@ const buttonVariants = cva(
         default: "bg-blue-600 text-white shadow hover:bg-blue-700",
         destructive: "bg-red-600 text-white shadow-sm hover:bg-red-600/90",
         outline:
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+          "border border-gray-300 bg-background shadow-sm hover:bg-accent hover:text-accent-red-500",
+        outlineBlue:
+          "text-blue-600 border border-gray-300 bg-background shadow-sm transition-colors duration-1000 hover:bg-gray-200 hover:text-gray-900 focus-visible:ring-green hover:outline-none",
         secondary:
           "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
