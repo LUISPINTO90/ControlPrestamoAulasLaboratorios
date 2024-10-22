@@ -1,7 +1,6 @@
-//src\components\spaces\BookingForm.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -24,79 +23,61 @@ export function BookingForm({
   selectedDate,
   existingBookings,
 }: BookingFormProps) {
-  const [availableStartHours, setAvailableStartHours] = useState<string[]>([]);
-  const [availableEndHours, setAvailableEndHours] = useState<string[]>([]);
-  const [selectedStartTime, setSelectedStartTime] = useState("");
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    // Generate all possible hours (7:00 - 22:00)
-    const allHours = Array.from({ length: 16 }, (_, i) => {
-      const hour = i + 7;
-      return `${hour.toString().padStart(2, "0")}:00`;
-    });
-
-    // Create time blocks for all bookings
-    const bookedBlocks = existingBookings.map((booking) => ({
-      start: new Date(booking.startTime).getHours(),
-      end: new Date(booking.endTime).getHours(),
-    }));
-
-    // Filter out hours that are within any booking block
-    const availableHours = allHours.filter((hour) => {
-      const currentHour = parseInt(hour.split(":")[0]);
-      return !bookedBlocks.some(
-        (block) => currentHour >= block.start && currentHour < block.end
-      );
-    });
-
-    setAvailableStartHours(availableHours);
-    setSelectedStartTime("");
-    setAvailableEndHours([]);
-  }, [selectedDate, existingBookings]);
-
-  useEffect(() => {
-    if (selectedStartTime) {
-      const startHour = parseInt(selectedStartTime.split(":")[0]);
-      const endHours = [];
-      let currentHour = startHour + 1;
-
-      // Find the next booking after the selected start time
-      const nextBooking = existingBookings
-        .map((booking) => ({
-          start: new Date(booking.startTime).getHours(),
-        }))
-        .filter((booking) => booking.start > startHour)
-        .sort((a, b) => a.start - b.start)[0];
-
-      // Add hours until we hit the next booking or 22:00
-      while (currentHour <= 22) {
-        if (nextBooking && currentHour >= nextBooking.start) {
-          break;
-        }
-
-        const hourString = `${currentHour.toString().padStart(2, "0")}:00`;
-        endHours.push(hourString);
-        currentHour++;
-      }
-
-      setAvailableEndHours(endHours);
+  // Generate all possible hour ranges (7:00 - 22:00)
+  const generateAvailableTimeRanges = () => {
+    const allRanges = [];
+    for (let i = 7; i < 22; i++) {
+      const startHour = i;
+      const endHour = i + 1;
+      const range = {
+        value: `${startHour}-${endHour}`,
+        label: `${startHour.toString().padStart(2, "0")}:00 - ${endHour
+          .toString()
+          .padStart(2, "0")}:00`,
+        start: startHour,
+        end: endHour,
+      };
+      allRanges.push(range);
     }
-  }, [selectedStartTime, existingBookings]);
+
+    // Filter out ranges that overlap with existing bookings
+    return allRanges.filter((range) => {
+      return !existingBookings.some((booking) => {
+        const bookingStart = new Date(booking.startTime).getHours();
+        const bookingEnd = new Date(booking.endTime).getHours();
+        return (
+          (range.start >= bookingStart && range.start < bookingEnd) ||
+          (range.end > bookingStart && range.end <= bookingEnd)
+        );
+      });
+    });
+  };
+
+  const availableRanges = generateAvailableTimeRanges();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
+    const timeRange = formData.get("timeRange") as string;
+    const [startHour, endHour] = timeRange.split("-");
+
+    // Create new FormData with start and end times
+    const bookingData = new FormData();
+    bookingData.append("spaceId", spaceId);
+    bookingData.append("date", selectedDate);
+    bookingData.append("startTime", startHour);
+    bookingData.append("endTime", endHour);
 
     try {
       setLoading(true);
-      await createBooking(formData);
+      await createBooking(bookingData);
       toast({
         title: "Reserva creada",
         description: "La reserva se ha creado exitosamente",
       });
-      // Refresh the page to show the new booking
       window.location.reload();
     } catch (error) {
       toast({
@@ -112,53 +93,26 @@ export function BookingForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <input type="hidden" name="spaceId" value={spaceId} />
-      <input type="hidden" name="date" value={selectedDate} />
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Hora de inicio</label>
-          <Select
-            name="startTime"
-            value={selectedStartTime}
-            onValueChange={setSelectedStartTime}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Seleccionar hora" />
-            </SelectTrigger>
-            <SelectContent className="bg-white">
-              {availableStartHours.map((hour) => (
-                <SelectItem key={hour} value={hour}>
-                  {hour}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Hora de fin</label>
-          <Select name="endTime" disabled={!selectedStartTime}>
-            <SelectTrigger>
-              <SelectValue placeholder="Seleccionar hora" />
-            </SelectTrigger>
-            <SelectContent className="bg-white">
-              {availableEndHours.map((hour) => (
-                <SelectItem key={hour} value={hour}>
-                  {hour}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Horario</label>
+        <Select name="timeRange">
+          <SelectTrigger>
+            <SelectValue placeholder="Seleccionar horario" />
+          </SelectTrigger>
+          <SelectContent className="bg-white">
+            {availableRanges.map((range) => (
+              <SelectItem key={range.value} value={range.value}>
+                {range.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <Button
         type="submit"
         className="w-full"
-        disabled={
-          loading || !selectedStartTime || availableEndHours.length === 0
-        }
+        disabled={loading || availableRanges.length === 0}
       >
         {loading ? "Creando reserva..." : "Crear reserva"}
       </Button>

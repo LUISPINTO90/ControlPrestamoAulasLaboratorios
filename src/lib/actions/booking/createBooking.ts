@@ -1,9 +1,7 @@
 // src/lib/actions/booking/createBooking.ts
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -48,6 +46,12 @@ export async function createBooking(formData: FormData): Promise<void> {
 
     if (startTime >= endTime) {
       throw new Error("La hora de inicio debe ser anterior a la hora de fin");
+    }
+
+    // Verificar que la hora de inicio no sea en el pasado
+    const now = new Date();
+    if (startTime < now) {
+      throw new Error("No se puede crear una reserva en el pasado");
     }
 
     // Verificar si hay traslapes para el espacio seleccionado
@@ -107,9 +111,6 @@ export async function createBooking(formData: FormData): Promise<void> {
         changeDate: new Date(),
       },
     });
-
-    revalidatePath("/home");
-    redirect("/home");
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(error.message);
