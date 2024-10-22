@@ -36,11 +36,7 @@ export default async function AuthLayout({
           <div className="mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex space-x-4">
               <TabLink href="/spaces" label="Espacios" />
-              <TabLink href="/spaces-schedule" label="Calendario de Espacios" />
-              <TabLink
-                href="/reservations-history"
-                label="Historial de Reservas"
-              />
+              <TabLink href="/my-reservations" label="Mis reservaciones" />
             </div>
           </div>
         </nav>
