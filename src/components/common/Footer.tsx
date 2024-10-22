@@ -8,7 +8,8 @@ export default function Footer() {
       <div className="max-w-screen-xl mx-auto p-6">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-sm text-muted-foreground">
-            © 2024 PrestaSalones™. Todos los derechos reservados.
+            © {new Date().getFullYear()} PrestaSalones™. Todos los derechos
+            reservados.
           </div>
           <div className="flex space-x-4">
             <Button variant="ghost" size="icon">
