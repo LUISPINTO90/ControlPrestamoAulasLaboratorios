@@ -6,7 +6,7 @@ export async function getSpaces() {
   try {
     const spaces = await db.space.findMany({
       orderBy: {
-o        name: "asc",
+        name: "asc",
       },
       select: {
         id: true,
