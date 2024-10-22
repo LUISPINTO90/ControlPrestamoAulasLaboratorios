@@ -1,8 +1,13 @@
+// src/components/common/Hero.tsx
 import { FaArrowRight, FaSignInAlt } from "react-icons/fa";
-
 import { Button } from "../ui/button";
 
-export default function Hero() {
+interface HeroProps {
+  onLoginClick: () => void;
+  onRegisterClick: () => void;
+}
+
+export default function Hero({ onLoginClick, onRegisterClick }: HeroProps) {
   return (
     <section className="py-12 px-4 text-gray-900">
       <div className="max-w-screen-xl mx-auto text-center">
@@ -15,14 +20,19 @@ export default function Hero() {
           facultad de Telemática.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <Button size="lg" className="rounded text-white text-base">
+          <Button
+            size="lg"
+            className="rounded text-white text-base"
+            onClick={onRegisterClick}
+          >
             Registrarme
-            <FaArrowRight className="mr-2 h-5 w-5" />
+            <FaArrowRight className="ml-2 h-5 w-5" />
           </Button>
           <Button
             variant="outline"
             size="lg"
             className="border-gray-300 rounded text-base"
+            onClick={onLoginClick}
           >
             <FaSignInAlt className="mr-2 h-5 w-5" />
             Iniciar sesión
