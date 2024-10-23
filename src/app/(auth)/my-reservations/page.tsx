@@ -1,10 +1,11 @@
+// page.tsx
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getUserBookings } from "@/lib/actions/booking/getUserBookings";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default async function MyReservationsPage() {
@@ -16,7 +17,7 @@ export default async function MyReservationsPage() {
   return (
     <div className="space-y-6">
       <Card className="p-4">
-        <p className="text-blue-500 text-sm uppercase">Mis reservas</p>
+        <p className="text-blue-600 text-sm uppercase">Mis reservas</p>
         <h1 className="text-4xl font-bold tracking-tight leading-none mb-4">
           Mis Reservaciones
         </h1>
@@ -26,11 +27,8 @@ export default async function MyReservationsPage() {
             <p className="text-gray-500">No tienes reservaciones activas.</p>
           ) : (
             bookings.map((booking) => {
-              // Ajustar la fecha aquí
-              const adjustedDate = new Date(booking.date);
-              adjustedDate.setHours(
-                adjustedDate.getHours() + adjustedDate.getTimezoneOffset() / 60
-              );
+              // Usar parseISO y ajustar a la zona horaria local
+              const bookingDate = parseISO(booking.date);
 
               return (
                 <Card key={booking.id} className="p-4">
@@ -38,23 +36,19 @@ export default async function MyReservationsPage() {
                     <div>
                       <h3 className="font-semibold">{booking.space.name}</h3>
                       <p className="text-sm text-gray-500">
-                        {format(adjustedDate, "EEEE d 'de' MMMM, yyyy", {
+                        {format(bookingDate, "EEEE d 'de' MMMM, yyyy", {
                           locale: es,
                         })}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {format(booking.startTime, "HH:mm")} -{" "}
-                        {format(booking.endTime, "HH:mm")}
+                        {booking.startTime} - {booking.endTime}
                       </p>
                     </div>
                     <div className="flex gap-2">
                       <Link
-                        href={`/spaces/${booking.spaceId}?date=${format(
-                          adjustedDate,
-                          "yyyy-MM-dd"
-                        )}`}
+                        href={`/spaces/${booking.spaceId}?date=${booking.date}`}
                       >
-                        <Button variant="outline" size="sm">
+                        <Button variant="default" size="sm" className="rounded">
                           Ver espacio
                         </Button>
                       </Link>
