@@ -20,7 +20,19 @@ export async function createBooking(formData: FormData): Promise<void> {
     // Create date objects for the selected date
     const [year, month, day] = dateStr.split("-").map(Number);
 
-    // Create UTC dates for start and end times
+    // Create local dates for validation
+    const bookingDate = new Date(year, month - 1, day);
+    bookingDate.setHours(0, 0, 0, 0);
+
+    const now = new Date();
+    const todayDate = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    todayDate.setHours(0, 0, 0, 0);
+
+    // Create UTC dates for database
     const startTime = new Date(Date.UTC(year, month - 1, day, startHour));
     const endTime = new Date(Date.UTC(year, month - 1, day, endHour));
     const date = new Date(Date.UTC(year, month - 1, day, 12)); // noon UTC for consistent date handling
@@ -34,11 +46,18 @@ export async function createBooking(formData: FormData): Promise<void> {
       throw new Error("La hora de inicio debe ser anterior a la hora de fin");
     }
 
-    // Check if start time is in the past
-    const now = new Date();
-    if (startTime < now) {
+    // Check if booking is in the past
+    if (bookingDate.getTime() < todayDate.getTime()) {
+      // Si es un día anterior
       throw new Error("No se puede crear una reserva en el pasado");
+    } else if (bookingDate.getTime() === todayDate.getTime()) {
+      // Si es hoy, verificar la hora
+      const currentHour = now.getHours();
+      if (startHour <= currentHour) {
+        throw new Error("No se puede crear una reserva en el pasado");
+      }
     }
+    // Si es un día futuro, permitir cualquier hora
 
     // Check for overlapping bookings
     const overlappingBooking = await db.booking.findFirst({

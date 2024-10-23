@@ -8,6 +8,7 @@ import { getBookingsBySpaceAndDate } from "@/lib/actions/booking/getBookingBySpa
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { getTodayDateString } from "@/lib/utils/date";
 
 interface PageProps {
   params: {
@@ -21,8 +22,7 @@ interface PageProps {
 export default async function SpacePage({ params, searchParams }: PageProps) {
   const session = await getServerSession(authOptions);
   const spaceId = params.id;
-  const selectedDate =
-    searchParams.date || new Date().toISOString().split("T")[0];
+  const selectedDate = searchParams.date || getTodayDateString();
 
   // Ensure we're passing strings to these functions
   const space = await getSpaceById(spaceId.toString());
