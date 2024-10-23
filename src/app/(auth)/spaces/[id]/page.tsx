@@ -39,7 +39,7 @@ export default async function SpacePage({ params, searchParams }: PageProps) {
   return (
     <div className="space-y-6">
       <Card className="p-4">
-        <p className="text-gray-500 text-sm uppercase">Detalles del espacio</p>
+        <p className="text-blue-600 text-sm uppercase">Detalles del espacio</p>
         <h1 className="text-4xl font-bold tracking-tight leading-none mb-2">
           {space.name}
         </h1>
