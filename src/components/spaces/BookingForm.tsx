@@ -26,31 +26,38 @@ export function BookingForm({
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // Generate all possible hour ranges (7:00 - 22:00)
   const generateAvailableTimeRanges = () => {
     const allRanges = [];
+    // Generamos rangos de 7am a 22pm
     for (let i = 7; i < 22; i++) {
       const startHour = i;
       const endHour = i + 1;
+
+      // Formato para mostrar al usuario
+      const displayStart = startHour.toString().padStart(2, "0");
+      const displayEnd = endHour.toString().padStart(2, "0");
+
       const range = {
-        value: `${startHour}-${endHour}`,
-        label: `${startHour.toString().padStart(2, "0")}:00 - ${endHour
-          .toString()
-          .padStart(2, "0")}:00`,
+        value: `${startHour}-${endHour}`, // Valor UTC para el backend
+        label: `${displayStart}:00 - ${displayEnd}:00`, // Display para el usuario
         start: startHour,
         end: endHour,
       };
       allRanges.push(range);
     }
 
-    // Filter out ranges that overlap with existing bookings
+    // Filtramos los rangos que ya están reservados
     return allRanges.filter((range) => {
       return !existingBookings.some((booking) => {
-        const bookingStart = new Date(booking.startTime).getHours();
-        const bookingEnd = new Date(booking.endTime).getHours();
+        const bookingStart = new Date(booking.startTime);
+        const bookingEnd = new Date(booking.endTime);
+        const bookingStartHour = bookingStart.getUTCHours();
+        const bookingEndHour = bookingEnd.getUTCHours();
+
         return (
-          (range.start >= bookingStart && range.start < bookingEnd) ||
-          (range.end > bookingStart && range.end <= bookingEnd)
+          (range.start >= bookingStartHour && range.start < bookingEndHour) ||
+          (range.end > bookingStartHour && range.end <= bookingEndHour) ||
+          (range.start <= bookingStartHour && range.end >= bookingEndHour)
         );
       });
     });
@@ -62,14 +69,13 @@ export function BookingForm({
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const timeRange = formData.get("timeRange") as string;
-    const [startHour, endHour] = timeRange.split("-");
+    const [startHour, endHour] = timeRange.split("-").map(Number);
 
-    // Create new FormData with start and end times
     const bookingData = new FormData();
     bookingData.append("spaceId", spaceId);
     bookingData.append("date", selectedDate);
-    bookingData.append("startTime", startHour);
-    bookingData.append("endTime", endHour);
+    bookingData.append("startTime", startHour.toString());
+    bookingData.append("endTime", endHour.toString());
 
     try {
       setLoading(true);
@@ -95,7 +101,7 @@ export function BookingForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <label className="text-sm font-medium">Horario</label>
-        <Select name="timeRange">
+        <Select name="timeRange" required>
           <SelectTrigger>
             <SelectValue placeholder="Seleccionar horario" />
           </SelectTrigger>

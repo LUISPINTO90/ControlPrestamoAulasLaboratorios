@@ -1,11 +1,9 @@
-// src/lib/actions/booking/createBooking.ts
 "use server";
 
 import { db } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-// lib/actions/booking/createBooking.ts
 export async function createBooking(formData: FormData): Promise<void> {
   try {
     const session = await getServerSession(authOptions);
@@ -16,30 +14,18 @@ export async function createBooking(formData: FormData): Promise<void> {
     const userId = parseInt(session.user.id);
     const spaceId = parseInt(formData.get("spaceId") as string);
     const dateStr = formData.get("date") as string;
+    const startHour = parseInt(formData.get("startTime") as string);
+    const endHour = parseInt(formData.get("endTime") as string);
 
-    // Aseguramos que la fecha se crea correctamente
+    // Create date objects for the selected date
     const [year, month, day] = dateStr.split("-").map(Number);
-    const date = new Date(year, month - 1, day, 12, 0, 0);
 
-    // Creamos las fechas de inicio y fin con la hora correcta
-    const startTime = new Date(
-      year,
-      month - 1,
-      day,
-      parseInt(formData.get("startTime") as string),
-      0,
-      0
-    );
-    const endTime = new Date(
-      year,
-      month - 1,
-      day,
-      parseInt(formData.get("endTime") as string),
-      0,
-      0
-    );
+    // Create UTC dates for start and end times
+    const startTime = new Date(Date.UTC(year, month - 1, day, startHour));
+    const endTime = new Date(Date.UTC(year, month - 1, day, endHour));
+    const date = new Date(Date.UTC(year, month - 1, day, 12)); // noon UTC for consistent date handling
 
-    // Validaciones básicas
+    // Validations
     if (!spaceId || !date || !startTime || !endTime) {
       throw new Error("Todos los campos son requeridos");
     }
@@ -48,13 +34,13 @@ export async function createBooking(formData: FormData): Promise<void> {
       throw new Error("La hora de inicio debe ser anterior a la hora de fin");
     }
 
-    // Verificar que la hora de inicio no sea en el pasado
+    // Check if start time is in the past
     const now = new Date();
     if (startTime < now) {
       throw new Error("No se puede crear una reserva en el pasado");
     }
 
-    // Verificar si hay traslapes para el espacio seleccionado
+    // Check for overlapping bookings
     const overlappingBooking = await db.booking.findFirst({
       where: {
         spaceId,
@@ -63,22 +49,28 @@ export async function createBooking(formData: FormData): Promise<void> {
           {
             OR: [
               {
-                AND: [
-                  { startTime: { lte: startTime } },
-                  { endTime: { gt: startTime } },
-                ],
+                startTime: {
+                  lte: startTime,
+                },
+                endTime: {
+                  gt: startTime,
+                },
               },
               {
-                AND: [
-                  { startTime: { lt: endTime } },
-                  { endTime: { gte: endTime } },
-                ],
+                startTime: {
+                  lt: endTime,
+                },
+                endTime: {
+                  gte: endTime,
+                },
               },
               {
-                AND: [
-                  { startTime: { gte: startTime } },
-                  { endTime: { lte: endTime } },
-                ],
+                startTime: {
+                  gte: startTime,
+                },
+                endTime: {
+                  lte: endTime,
+                },
               },
             ],
           },
@@ -92,7 +84,7 @@ export async function createBooking(formData: FormData): Promise<void> {
       );
     }
 
-    // Crear la reservación
+    // Create booking
     const booking = await db.booking.create({
       data: {
         userId,
@@ -103,7 +95,7 @@ export async function createBooking(formData: FormData): Promise<void> {
       },
     });
 
-    // Crear el historial
+    // Create booking history
     await db.bookingHistory.create({
       data: {
         bookingId: booking.id,

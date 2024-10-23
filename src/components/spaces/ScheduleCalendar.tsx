@@ -1,3 +1,4 @@
+// src/components/spaces/ScheduleCalendar.tsx
 "use client";
 
 import { format } from "date-fns";
@@ -48,7 +49,7 @@ export function ScheduleCalendar({
 
   const displayDate = (() => {
     const [year, month, day] = selectedDate.split("-").map(Number);
-    return new Date(year, month - 1, day, 12, 0, 0);
+    return new Date(year, month - 1, day);
   })();
 
   const isTimeSlotPast = (date: Date, hour: number) => {
@@ -58,14 +59,21 @@ export function ScheduleCalendar({
     return timeSlot < now;
   };
 
+  // Función actualizada para obtener las horas UTC correctamente
+  const getUTCHours = (date: Date): number => {
+    return date.getUTCHours();
+  };
+
   const getBookingForTimeRange = (startHour: number, endHour: number) => {
     return bookings.find((booking) => {
-      // Convertir la hora almacenada en UTC a la zona horaria local
-      const bookingStart = new Date(booking.startTime).getHours();
-      const bookingEnd = new Date(booking.endTime).getHours();
+      const bookingStart = getUTCHours(new Date(booking.startTime));
+      const bookingEnd = getUTCHours(new Date(booking.endTime));
+
       return (
+        (startHour === bookingStart && endHour === bookingEnd) ||
         (startHour >= bookingStart && startHour < bookingEnd) ||
-        (endHour > bookingStart && endHour <= bookingEnd)
+        (endHour > bookingStart && endHour <= bookingEnd) ||
+        (startHour <= bookingStart && endHour >= bookingEnd)
       );
     });
   };
@@ -93,6 +101,11 @@ export function ScheduleCalendar({
     }
   };
 
+  // Función para formatear la hora para mostrar
+  const formatTimeDisplay = (hour: number): string => {
+    return `${hour.toString().padStart(2, "0")}:00`;
+  };
+
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4">
@@ -116,9 +129,7 @@ export function ScheduleCalendar({
             return (
               <TableRow key={start}>
                 <TableCell>
-                  {`${start.toString().padStart(2, "0")}:00 - ${end
-                    .toString()
-                    .padStart(2, "0")}:00`}
+                  {`${formatTimeDisplay(start)} - ${formatTimeDisplay(end)}`}
                 </TableCell>
                 <TableCell>
                   <span
