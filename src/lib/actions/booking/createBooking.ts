@@ -27,22 +27,30 @@ export async function createBooking(formData: FormData): Promise<void> {
       throw new Error("Usuario no encontrado");
     }
 
-    // Create date objects for the selected date
+    // Parse the date in Mexico City timezone
+    const mexicoCityTZ = "America/Mexico_City";
+
+    // Create date objects for validation using the local timezone (Mexico City)
     const [year, month, day] = dateStr.split("-").map(Number);
 
-    // Create local dates for validation
-    const bookingDate = new Date(year, month - 1, day);
+    // Get current time in Mexico City
+    const nowInMexico = new Date(
+      new Date().toLocaleString("en-US", { timeZone: mexicoCityTZ })
+    );
+
+    // Create booking date in Mexico City timezone
+    const bookingDate = new Date(
+      new Date(year, month - 1, day).toLocaleString("en-US", {
+        timeZone: mexicoCityTZ,
+      })
+    );
     bookingDate.setHours(0, 0, 0, 0);
 
-    const now = new Date();
-    const todayDate = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate()
-    );
+    // Create today's date in Mexico City timezone
+    const todayDate = new Date(nowInMexico);
     todayDate.setHours(0, 0, 0, 0);
 
-    // Create UTC dates for database
+    // Create UTC dates for database storage
     const startTime = new Date(Date.UTC(year, month - 1, day, startHour));
     const endTime = new Date(Date.UTC(year, month - 1, day, endHour));
     const date = new Date(Date.UTC(year, month - 1, day, 12)); // noon UTC for consistent date handling
@@ -56,18 +64,20 @@ export async function createBooking(formData: FormData): Promise<void> {
       throw new Error("La hora de inicio debe ser anterior a la hora de fin");
     }
 
-    // Check if booking is in the past
+    // Enhanced past booking validation
+    const currentHourInMexico = nowInMexico.getHours();
+
     if (bookingDate.getTime() < todayDate.getTime()) {
-      // Si es un día anterior
+      // If it's a past date
       throw new Error("No se puede crear una reserva en el pasado");
     } else if (bookingDate.getTime() === todayDate.getTime()) {
-      // Si es hoy, verificar la hora
-      const currentHour = now.getHours();
-      if (startHour <= currentHour) {
-        throw new Error("No se puede crear una reserva en el pasado");
+      // If it's today, check the hour
+      if (startHour <= currentHourInMexico) {
+        throw new Error(
+          "No se puede crear una reserva en el pasado o en la hora actual"
+        );
       }
     }
-    // Si es un día futuro, permitir cualquier hora
 
     // Check for overlapping bookings
     const overlappingBooking = await db.booking.findFirst({
@@ -143,25 +153,21 @@ export async function createBooking(formData: FormData): Promise<void> {
       },
     });
 
-    // Función modificada para formatear la hora correctamente
     const formatTime = (hour: number): string => {
-      // Aseguramos que la hora esté en formato 24 horas con dos dígitos
       return hour.toString().padStart(2, "0") + ":00";
     };
 
-    // Función para formatear la fecha completa
     const formatFullDate = (date: Date) => {
       const options: Intl.DateTimeFormatOptions = {
         day: "numeric",
         month: "long",
         year: "numeric",
-        timeZone: "America/Mexico_City",
+        timeZone: mexicoCityTZ,
       };
       return new Intl.DateTimeFormat("es-MX", options).format(date);
     };
 
     try {
-      // Usar directamente las horas originales del formulario
       const localDate = formatFullDate(date);
       const localStartTime = formatTime(startHour);
       const localEndTime = formatTime(endHour);
