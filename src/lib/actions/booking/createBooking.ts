@@ -18,6 +18,15 @@ export async function createBooking(formData: FormData): Promise<void> {
     const startHour = parseInt(formData.get("startTime") as string);
     const endHour = parseInt(formData.get("endTime") as string);
 
+    // Check if user exists
+    const userExists = await db.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!userExists) {
+      throw new Error("Usuario no encontrado");
+    }
+
     // Create date objects for the selected date
     const [year, month, day] = dateStr.split("-").map(Number);
 
