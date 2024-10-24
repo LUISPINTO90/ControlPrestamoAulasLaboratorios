@@ -1,105 +1,83 @@
 import { PrismaClient } from "@prisma/client";
-import { faker } from "@faker-js/faker/locale/en"; // Changed to English locale
-import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Clear existing data
-  await prisma.bookingHistory.deleteMany({});
-  await prisma.booking.deleteMany({});
-  await prisma.user.deleteMany({});
+  // Limpiar los datos existentes solo de los espacios
   await prisma.space.deleteMany({});
 
-  // Create users
-  const users = await Promise.all(
-    Array.from({ length: 20 }).map(async () => {
-      return await prisma.user.create({
-        data: {
-          firstName: faker.person.firstName(),
-          lastName: faker.person.lastName(),
-          email: faker.internet.email(),
-          password: await bcrypt.hash("password123", 10),
-          userType: faker.helpers.arrayElement([
-            "Student",
-            "Teacher",
-            "Administrator",
-          ]),
-        },
-      });
-    })
-  );
+  // Crear espacios personalizados para la Facultad de Telemática
+  const spacesData: Array<{
+    name: string;
+    spaceType: "Classroom" | "Laboratory";
+    capacity: number;
+    location: string;
+  }> = [
+    {
+      name: "Aula 1",
+      spaceType: "Classroom",
+      capacity: 50,
+      location: "Posgrado",
+    },
+    {
+      name: "Aula 2",
+      spaceType: "Classroom",
+      capacity: 30,
+      location: "Posgrado",
+    },
+    {
+      name: "Aula 3",
+      spaceType: "Classroom",
+      capacity: 30,
+      location: "Posgrado",
+    },
+    {
+      name: "Laboratorio redes",
+      spaceType: "Laboratory",
+      capacity: 25,
+      location: "Facultad de Telemática",
+    },
+    {
+      name: "Laboratorio arquitectura",
+      spaceType: "Laboratory",
+      capacity: 25,
+      location: "Facultad de Telemática",
+    },
+    {
+      name: "Centro de cómputo",
+      spaceType: "Laboratory",
+      capacity: 50,
+      location: "Posgrado",
+    },
+    {
+      name: "Centro de cómputo literatura",
+      spaceType: "Laboratory",
+      capacity: 50,
+      location: "Facultad de Telemática",
+    },
+    {
+      name: "Centro de cómputo",
+      spaceType: "Classroom",
+      capacity: 25,
+      location: "Dirección General de Recursos Educativos Digitales (DGRED)",
+    },
+  ];
 
-  // Create spaces
-  const spaces = await Promise.all(
-    Array.from({ length: 10 }).map(async () => {
+  // Crear los espacios
+  await Promise.all(
+    spacesData.map(async (space) => {
       return await prisma.space.create({
         data: {
-          name:
-            faker.helpers.arrayElement([
-              "Computer Lab",
-              "Chemistry Lab",
-              "Main Hall",
-              "Conference Room",
-              "Regular Classroom",
-            ]) +
-            " " +
-            faker.number.int({ min: 100, max: 999 }),
-          spaceType: faker.helpers.arrayElement(["Laboratory", "Classroom"]),
-          capacity: faker.number.int({ min: 20, max: 100 }),
-          location: `Building ${faker.helpers.arrayElement([
-            "A",
-            "B",
-            "C",
-            "D",
-          ])}, Floor ${faker.number.int({ min: 1, max: 5 })}`,
+          name: space.name,
+          spaceType: space.spaceType,
+          capacity: space.capacity,
+          location: space.location,
         },
       });
     })
   );
 
-  // Create bookings
-  const bookings = await Promise.all(
-    Array.from({ length: 30 }).map(async () => {
-      const baseDate = faker.date.future();
-      const startTime = new Date(baseDate);
-      startTime.setHours(faker.number.int({ min: 7, max: 18 }), 0, 0);
-
-      const endTime = new Date(startTime);
-      endTime.setHours(
-        startTime.getHours() + faker.number.int({ min: 1, max: 3 })
-      );
-
-      return await prisma.booking.create({
-        data: {
-          userId: faker.helpers.arrayElement(users).id,
-          spaceId: faker.helpers.arrayElement(spaces).id,
-          date: baseDate,
-          startTime: startTime,
-          endTime: endTime,
-        },
-      });
-    })
-  );
-
-  // Create booking history
-  await Promise.all(
-    bookings.map(async (booking) => {
-      return await prisma.bookingHistory.create({
-        data: {
-          bookingId: booking.id,
-          status: faker.helpers.arrayElement([
-            "Reserved",
-            "Cancelled",
-            "Completed",
-          ]),
-          changeDate: faker.date.recent(),
-        },
-      });
-    })
-  );
-
-  console.log("Database successfully seeded!");
+  console.log("¡Espacios creados con éxito!");
 }
 
 main()
