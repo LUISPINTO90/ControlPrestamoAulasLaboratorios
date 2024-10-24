@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { transporter } from "@/lib/nodemailer";
 
 export async function createBooking(formData: FormData): Promise<void> {
   try {
@@ -103,7 +104,6 @@ export async function createBooking(formData: FormData): Promise<void> {
       );
     }
 
-    // Create booking
     const booking = await db.booking.create({
       data: {
         userId,
@@ -112,9 +112,20 @@ export async function createBooking(formData: FormData): Promise<void> {
         startTime,
         endTime,
       },
+      include: {
+        user: {
+          select: {
+            email: true,
+          },
+        },
+        space: {
+          select: {
+            name: true,
+          },
+        },
+      },
     });
 
-    // Create booking history
     await db.bookingHistory.create({
       data: {
         bookingId: booking.id,
@@ -122,7 +133,60 @@ export async function createBooking(formData: FormData): Promise<void> {
         changeDate: new Date(),
       },
     });
+
+    // Función modificada para formatear la hora correctamente
+    const formatTime = (hour: number): string => {
+      // Aseguramos que la hora esté en formato 24 horas con dos dígitos
+      return hour.toString().padStart(2, "0") + ":00";
+    };
+
+    // Función para formatear la fecha completa
+    const formatFullDate = (date: Date) => {
+      const options: Intl.DateTimeFormatOptions = {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        timeZone: "America/Mexico_City",
+      };
+      return new Intl.DateTimeFormat("es-MX", options).format(date);
+    };
+
+    try {
+      // Usar directamente las horas originales del formulario
+      const localDate = formatFullDate(date);
+      const localStartTime = formatTime(startHour);
+      const localEndTime = formatTime(endHour);
+
+      await transporter.sendMail({
+        from: process.env.GMAIL_USER,
+        to: booking.user.email,
+        subject: "Confirmación de Reservación",
+        html: `
+          <h1>¡Tu reservación ha sido confirmada!</h1>
+          <p>Hola ${booking.user.email},</p>
+          <p>Tu reservación ha sido creada exitosamente con los siguientes detalles:</p>
+          <ul style="list-style-type: none; padding-left: 0;">
+            <li><strong>Espacio:</strong> ${booking.space.name}</li>
+            <li><strong>Fecha:</strong> ${localDate}</li>
+            <li><strong>Hora de inicio:</strong> ${localStartTime}</li>
+            <li><strong>Hora de fin:</strong> ${localEndTime}</li>
+          </ul>
+          <p>Si necesitas hacer algún cambio o tienes preguntas, por favor contáctanos.</p>
+          <p>¡Gracias por usar nuestro servicio!</p>
+        `,
+      });
+
+      console.log("Email sent successfully with local time:", {
+        date: localDate,
+        startTime: localStartTime,
+        endTime: localEndTime,
+      });
+    } catch (emailError) {
+      console.error("Error sending email:", emailError);
+      console.warn("Booking created but email notification failed");
+    }
   } catch (error) {
+    console.error("Error in createBooking:", error);
     if (error instanceof Error) {
       throw new Error(error.message);
     }
