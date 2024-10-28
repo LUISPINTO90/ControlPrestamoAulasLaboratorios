@@ -27,37 +27,34 @@ export function BookingForm({
   const { toast } = useToast();
 
   const generateAvailableTimeRanges = () => {
-    const allRanges = [];
-    // Generamos rangos de 7am a 22pm
-    for (let i = 7; i < 22; i++) {
-      const startHour = i;
-      const endHour = i + 1;
+    const now = new Date();
+    const currentHour = now.getHours();
+    const isToday = selectedDate === now.toISOString().split("T")[0];
+    const allRanges = Array.from({ length: 15 }, (_, i) => i + 7).map(
+      (startHour) => {
+        const endHour = startHour + 1;
+        return {
+          value: `${startHour}-${endHour}`,
+          label: `${String(startHour).padStart(2, "0")}:00 - ${String(
+            endHour
+          ).padStart(2, "0")}:00`,
+          start: startHour,
+          end: endHour,
+        };
+      }
+    );
 
-      // Formato para mostrar al usuario
-      const displayStart = startHour.toString().padStart(2, "0");
-      const displayEnd = endHour.toString().padStart(2, "0");
-
-      const range = {
-        value: `${startHour}-${endHour}`, // Valor UTC para el backend
-        label: `${displayStart}:00 - ${displayEnd}:00`, // Display para el usuario
-        start: startHour,
-        end: endHour,
-      };
-      allRanges.push(range);
-    }
-
-    // Filtramos los rangos que ya están reservados
     return allRanges.filter((range) => {
+      // Filter out past times if today
+      if (isToday && range.start <= currentHour) return false;
+      // Filter out times that overlap with existing bookings
       return !existingBookings.some((booking) => {
-        const bookingStart = new Date(booking.startTime);
-        const bookingEnd = new Date(booking.endTime);
-        const bookingStartHour = bookingStart.getUTCHours();
-        const bookingEndHour = bookingEnd.getUTCHours();
-
+        const bookingStart = new Date(booking.startTime).getUTCHours();
+        const bookingEnd = new Date(booking.endTime).getUTCHours();
         return (
-          (range.start >= bookingStartHour && range.start < bookingEndHour) ||
-          (range.end > bookingStartHour && range.end <= bookingEndHour) ||
-          (range.start <= bookingStartHour && range.end >= bookingEndHour)
+          (range.start >= bookingStart && range.start < bookingEnd) ||
+          (range.end > bookingStart && range.end <= bookingEnd) ||
+          (range.start <= bookingStart && range.end >= bookingEnd)
         );
       });
     });
