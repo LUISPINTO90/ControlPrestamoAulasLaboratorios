@@ -2,7 +2,7 @@
 
 Este sistema permite a los estudiantes y profesores de la Facultad de Telemática de la Universidad de Colima reservar laboratorios y aulas de forma rápida y sencilla, llevando un control automatizado de la disponibilidad y el uso de estos espacios.
 
-![Interfaz del Sistema](./public/image.png)
+<img src="./public/image.png" alt="Interfaz del Sistema" width="500" height="250">
 
 ## Funcionalidades Principales
 
