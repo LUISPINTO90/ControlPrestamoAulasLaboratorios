@@ -1,36 +1,15 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sistema de Control de Préstamos de Laboratorios y Aulas 🎓💻
 
-## Getting Started
+Este sistema permite a los estudiantes y profesores de la Facultad de Telemática de la Universidad de Colima reservar laboratorios y aulas de forma rápida y sencilla, llevando un control automatizado de la disponibilidad y el uso de estos espacios.
 
-First, run the development server:
+![Interfaz del Sistema](./public/image.png)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Funcionalidades Principales
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Reserva de Espacios**: Reserva laboratorios y aulas con solo unos clics.
+- **Calendario de Disponibilidad**: Consulta la disponibilidad en tiempo real.
+- **Gestión de Usuarios**: Controla el acceso de estudiantes, profesores y administradores.
+- **Notificaciones**: Recibe confirmaciones y recordatorios de tus reservas.
+- **Historial de Reservas**: Revisa un registro de todas las reservas realizadas para un seguimiento detallado.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Este sistema simplifica y optimiza el uso de recursos, asegurando una experiencia de reserva fluida y eficiente para toda la comunidad académica. ✨
