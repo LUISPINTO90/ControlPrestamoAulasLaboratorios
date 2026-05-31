@@ -25,7 +25,7 @@ export function SpacesList({ spaces }: SpacesListProps) {
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {spaces.map((space, i) => (
+      {spaces.map((space) => (
         <Link href={`/spaces/${space.id}`} key={space.id} className="group">
           <div className="bg-white rounded-2xl border border-[#D4E0DB] p-6 hover:border-[#2C4A3E] hover:shadow-sm transition-all h-full flex flex-col">
             <p className="font-sans text-[11px] font-semibold tracking-normal text-[#7A9088] mb-3">

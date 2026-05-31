@@ -1,15 +1,44 @@
-# Sistema de Control de Préstamos de Laboratorios y Aulas 🎓💻
+# PrestaSalones
 
-Este sistema permite a los estudiantes y profesores de la Facultad de Telemática de la Universidad de Colima reservar laboratorios y aulas de forma rápida y sencilla, llevando un control automatizado de la disponibilidad y el uso de estos espacios.
+Sistema de reservación de salones y laboratorios para la Facultad de Telemática, Universidad de Colima.
 
-<img src="./public/image.png" alt="Interfaz del Sistema" width="500" height="250">
+## Stack
 
-## Funcionalidades Principales
+- **Next.js 16** — App Router, Server Actions
+- **React 19**
+- **Prisma** + PostgreSQL (Neon)
+- **NextAuth v4** — autenticación con credenciales
+- **Tailwind CSS** + shadcn/ui
+- **Geist Sans** — tipografía
 
-- **Reserva de Espacios**: Reserva laboratorios y aulas con solo unos clics.
-- **Calendario de Disponibilidad**: Consulta la disponibilidad en tiempo real.
-- **Gestión de Usuarios**: Controla el acceso de estudiantes, profesores y administradores.
-- **Notificaciones**: Recibe confirmaciones y recordatorios de tus reservas.
-- **Historial de Reservas**: Revisa un registro de todas las reservas realizadas para un seguimiento detallado.
+## Funcionalidades
 
-Este sistema simplifica y optimiza el uso de recursos, asegurando una experiencia de reserva fluida y eficiente para toda la comunidad académica. ✨
+- Reserva de salones y laboratorios por hora
+- Calendario de disponibilidad en tiempo real
+- Gestión de usuarios (Estudiante, Profesor, Administrador)
+- Cancelación de reservaciones propias
+- Sesión persistente con JWT
+
+## Desarrollo local
+
+```bash
+# Instalar dependencias
+npm install
+
+# Configurar variables de entorno
+cp .env.example .env
+
+# Generar cliente de Prisma y levantar servidor
+npx prisma generate
+npm run dev
+```
+
+Requiere una instancia de PostgreSQL. Puedes usar el `docker-compose.yml` incluido o una base de datos en [Neon](https://neon.tech).
+
+## Variables de entorno
+
+```env
+DATABASE_URL=
+NEXTAUTH_SECRET=
+NEXTAUTH_URL=http://localhost:3000
+```

@@ -9,8 +9,8 @@ import { getTodayDateString } from "@/lib/utils/date";
 import Link from "next/link";
 
 interface PageProps {
-  params: { id: number };
-  searchParams: { date?: string };
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ date?: string }>;
 }
 
 const typeLabel: Record<string, string> = {
@@ -20,8 +20,9 @@ const typeLabel: Record<string, string> = {
 
 export default async function SpacePage({ params, searchParams }: PageProps) {
   const session = await getServerSession(authOptions);
-  const spaceId = params.id;
-  const selectedDate = searchParams.date || getTodayDateString();
+  const { id: spaceId } = await params;
+  const { date } = await searchParams;
+  const selectedDate = date || getTodayDateString();
 
   const space = await getSpaceById(spaceId.toString());
   const bookings = await getBookingsBySpaceAndDate(spaceId.toString(), selectedDate);
