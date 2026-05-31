@@ -1,15 +1,10 @@
-import { FaUniversity } from "react-icons/fa";
-
 export default function Navbar() {
   return (
-    <nav className="border-b">
-      <div className="max-w-screen-xl flex items-center justify-between mx-auto p-4">
-        <div className="flex items-center space-x-2">
-          <FaUniversity className="h-8 w-8 text-blue-600" />
-          <span className="ml-4 text-blue-600 text-lg font-bold">
-            PrestaSalones
-          </span>
-        </div>
+    <nav className="border-b border-[#d2d2d7] bg-white/90 backdrop-blur-xl sticky top-0 z-50">
+      <div className="max-w-screen-lg mx-auto px-6 h-14 flex items-center">
+        <span className="text-[17px] font-semibold text-[#1d1d1f] tracking-tight">
+          PrestaSalones
+        </span>
       </div>
     </nav>
   );

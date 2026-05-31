@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
 import "@/styles/globals.css";
 import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/toaster";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "PrestaSalones",
@@ -17,8 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
-      <body className={inter.className}>
+    <html lang="es" className={GeistSans.variable}>
+      <body className="font-sans antialiased">
         <Providers>{children}</Providers>
         <Toaster />
       </body>

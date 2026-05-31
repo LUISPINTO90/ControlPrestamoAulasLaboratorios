@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -18,107 +17,85 @@ interface BookingFormProps {
   existingBookings: { startTime: string; endTime: string }[];
 }
 
-export function BookingForm({
-  spaceId,
-  selectedDate,
-  existingBookings,
-}: BookingFormProps) {
+function pad(n: number) {
+  return String(n).padStart(2, "0");
+}
+
+export function BookingForm({ spaceId, selectedDate, existingBookings }: BookingFormProps) {
   const [loading, setLoading] = useState(false);
+  const [selectedRange, setSelectedRange] = useState<string>("");
   const { toast } = useToast();
 
-  const generateAvailableTimeRanges = () => {
+  const availableRanges = (() => {
     const now = new Date();
-    const currentHour = now.getHours();
     const isToday = selectedDate === now.toISOString().split("T")[0];
-    const allRanges = Array.from({ length: 15 }, (_, i) => i + 7).map(
-      (startHour) => {
-        const endHour = startHour + 1;
-        return {
-          value: `${startHour}-${endHour}`,
-          label: `${String(startHour).padStart(2, "0")}:00 - ${String(
-            endHour
-          ).padStart(2, "0")}:00`,
-          start: startHour,
-          end: endHour,
-        };
-      }
-    );
-
-    return allRanges.filter((range) => {
-      // Filter out past times if today
-      if (isToday && range.start <= currentHour) return false;
-      // Filter out times that overlap with existing bookings
-      return !existingBookings.some((booking) => {
-        const bookingStart = new Date(booking.startTime).getUTCHours();
-        const bookingEnd = new Date(booking.endTime).getUTCHours();
-        return (
-          (range.start >= bookingStart && range.start < bookingEnd) ||
-          (range.end > bookingStart && range.end <= bookingEnd) ||
-          (range.start <= bookingStart && range.end >= bookingEnd)
-        );
+    return Array.from({ length: 15 }, (_, i) => i + 7)
+      .map((h) => ({ value: `${h}-${h + 1}`, label: `${pad(h)}:00 – ${pad(h + 1)}:00`, start: h, end: h + 1 }))
+      .filter((r) => {
+        if (isToday && r.start <= now.getHours()) return false;
+        return !existingBookings.some((b) => {
+          const bs = new Date(b.startTime).getUTCHours();
+          const be = new Date(b.endTime).getUTCHours();
+          return (r.start >= bs && r.start < be) || (r.end > bs && r.end <= be) || (r.start <= bs && r.end >= be);
+        });
       });
-    });
-  };
-
-  const availableRanges = generateAvailableTimeRanges();
+  })();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData(e.target as HTMLFormElement);
-    const timeRange = formData.get("timeRange") as string;
-    const [startHour, endHour] = timeRange.split("-").map(Number);
-
-    const bookingData = new FormData();
-    bookingData.append("spaceId", spaceId);
-    bookingData.append("date", selectedDate);
-    bookingData.append("startTime", startHour.toString());
-    bookingData.append("endTime", endHour.toString());
-
+    if (!selectedRange) return;
+    const [startHour, endHour] = selectedRange.split("-").map(Number);
+    const data = new FormData();
+    data.append("spaceId", spaceId);
+    data.append("date", selectedDate);
+    data.append("startTime", startHour.toString());
+    data.append("endTime", endHour.toString());
     try {
       setLoading(true);
-      await createBooking(bookingData);
-      toast({
-        title: "Reserva creada",
-        description: "La reserva se ha creado exitosamente",
-      });
+      await createBooking(data);
+      toast({ title: "Reservación confirmada" });
       window.location.reload();
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Error al crear la reserva",
+        description: error instanceof Error ? error.message : "No se pudo crear la reservación",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Horario</label>
-        <Select name="timeRange" required>
-          <SelectTrigger>
-            <SelectValue placeholder="Seleccionar horario" />
-          </SelectTrigger>
-          <SelectContent className="bg-white">
-            {availableRanges.map((range) => (
-              <SelectItem key={range.value} value={range.value}>
-                {range.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+  if (availableRanges.length === 0) {
+    return (
+      <p className="font-sans text-[13px] text-white/50 bg-white/10 rounded-xl px-4 py-3">
+        Sin horarios disponibles para este día.
+      </p>
+    );
+  }
 
-      <Button
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <Select name="timeRange" required value={selectedRange} onValueChange={setSelectedRange}>
+        <SelectTrigger className="h-11 w-full rounded-xl border-white/20 bg-white/10 text-white text-[14px] font-sans focus:border-[#F5E44A] focus:ring-[#F5E44A] placeholder:text-white/50 transition-colors">
+          <SelectValue placeholder="Seleccionar horario…" />
+        </SelectTrigger>
+        <SelectContent className="bg-white rounded-xl border-[#D4E0DB] shadow-lg">
+          {availableRanges.map((r) => (
+            <SelectItem key={r.value} value={r.value} className="font-sans text-[14px] py-2.5 cursor-pointer text-[#1A2E25]">
+              {r.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <button
         type="submit"
-        className="w-full"
-        disabled={loading || availableRanges.length === 0}
+        disabled={loading || !selectedRange}
+        className="font-sans w-full h-11 rounded-full bg-[#F5E44A] hover:bg-[#EFD93A] disabled:opacity-40 disabled:cursor-not-allowed text-[#1A2E25] text-[14px] font-semibold transition-colors"
       >
-        {loading ? "Creando reserva..." : "Crear reserva"}
-      </Button>
+        {loading ? "Reservando…" : "Confirmar reservación"}
+      </button>
     </form>
   );
 }
